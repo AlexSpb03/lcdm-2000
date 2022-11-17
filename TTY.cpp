@@ -86,6 +86,7 @@ int TTY::Write(const vector<unsigned char> &data)
 
 void TTY::Read(vector<unsigned char> &data, int size)
 {
+    int timeout_sec = 60;
     data.clear();
     if (F_ID == -1)
     {
@@ -108,7 +109,7 @@ void TTY::Read(vector<unsigned char> &data, int size)
         if (!attempt)
             break;
         //--- wait ready read bytes
-        poll(&fds, 1, 60000);
+        poll(&fds, 1, timeout_sec * 1000);
 
         //--- if ready to read
         if (fds.revents & POLLIN)
