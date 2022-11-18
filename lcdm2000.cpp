@@ -542,6 +542,12 @@ namespace Devices
 		RejectTray = (response[7] & 0b01000000) ? true : false;
 	}
 
+	/**
+	 * @brief 
+	 * test status device and purge if need
+	 * if sensor error gen exception
+	 * call in all commands in begin
+	 */
 	void
 	lcdm2000::testStatus()
 	{
