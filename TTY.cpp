@@ -100,9 +100,8 @@ void TTY::Read(vector<unsigned char> &data, int size)
     fds.fd = F_ID;
     fds.events = POLLIN;
 
+    //-- count attempts for read data. each byte two times
     int attempt = size << 1;
-    if (size > 1)
-        std::cout << "attempt [start] = " << std::dec << (int)attempt << std::endl;
 
     for (;;)
     {
@@ -138,6 +137,4 @@ void TTY::Read(vector<unsigned char> &data, int size)
         }
         attempt--;
     }
-    if (size > 1)
-        std::cout << "attempt [end] = " << std::dec << (int)attempt << std::endl;
 }
