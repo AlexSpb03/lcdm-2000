@@ -463,7 +463,7 @@ namespace Devices
 
 		auto response = go(LcdmCommands::PURGE, {}, lenResponse);
 
-		//--- response STATUS command must be 10 bytes
+		//--- compare length
 		if (response.size() != lenResponse)
 		{
 			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
@@ -491,7 +491,7 @@ namespace Devices
 
 		auto response = go(LcdmCommands::STATUS, {}, lenResponse);
 
-		//--- response STATUS command must be 10 bytes
+		//--- compare length
 		if (response.size() != lenResponse)
 		{
 			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
@@ -554,7 +554,7 @@ namespace Devices
 		//--- get response
 		auto response = go(LcdmCommands::UPPER_DISPENSE, data, lenResponse);
 
-		//--- response STATUS command must be 10 bytes
+		//--- compare length
 		if (response.size() != lenResponse)
 		{
 			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
@@ -602,7 +602,7 @@ namespace Devices
 		//--- get response
 		auto response = go(LcdmCommands::LOWER_DISPENSE, data, lenResponse);
 
-		//--- response STATUS command must be 10 bytes
+		//--- compare length
 		if (response.size() != lenResponse)
 		{
 			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
@@ -665,7 +665,7 @@ namespace Devices
 		//--- get response
 		auto response = go(LcdmCommands::UPPER_AND_LOWER_DISPENSE, data, lenResponse);
 
-		//--- response STATUS command must be 10 bytes
+		//--- compare length
 		if (response.size() != lenResponse)
 		{
 			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
