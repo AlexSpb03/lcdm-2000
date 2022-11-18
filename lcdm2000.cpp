@@ -594,12 +594,12 @@ namespace Devices
 		//--- position error byte in response packet
 		int numErrorByte = 12;
 
-		if (_count_upper < 1 || _count_upper > 60)
+		if (_count_upper < 0 || _count_upper > 60)
 		{
 			throw Exception("Bad _count_upper for upperLowerDispense", EXCEPTION_BAD_COUNT);
 		}
 
-		if (_count_lower < 1 || _count_lower > 60)
+		if (_count_lower < 0 || _count_lower > 60)
 		{
 			throw Exception("Bad _count_lower for upperLowerDispense", EXCEPTION_BAD_COUNT);
 		}
