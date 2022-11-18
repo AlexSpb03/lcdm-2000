@@ -11,13 +11,23 @@ int main()
 
     try
     {
-        lcdm2000.purge();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        lcdm2000.status();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        lcdm2000.upperDispense(1);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        lcdm2000.lowerDispense(2);
+        //lcdm2000.purge();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        //lcdm2000.status();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        auto result = lcdm2000.upperLowerDispense(1, 2);
+
+        std::cout << "result: ";
+        for(auto & p: result){
+            std::cout << std::dec << (int)p << " ";
+        }
+        std::cout << std::endl;
+
+        // lcdm2000.upperDispense(1);
+        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+        // lcdm2000.lowerDispense(2);
     }
     catch (Devices::lcdm2000::Exception &e)
     {

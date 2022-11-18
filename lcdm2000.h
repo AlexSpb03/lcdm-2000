@@ -50,6 +50,22 @@ namespace Devices
 
         cc_byte errorCode;
         std::string errorMessage;
+    public: //sensors
+
+    bool CheckSensor1;
+    bool CheckSensor2;
+    bool CheckSensor3;
+    bool CheckSensor4;
+    bool DivertSensor1;
+    bool DivertSensor2;
+    bool EjectSensor;
+    bool ExitSensor;
+    bool SolenoidSensor;
+    bool UpperNearEnd;
+    bool LowerNearEnd;
+    bool CashBoxUpper;
+    bool CashBoxLower;
+    bool RejectTray;
 
     public:
         lcdm2000();
@@ -72,6 +88,7 @@ namespace Devices
         void status();
         void upperDispense(int _count);
         void lowerDispense(int _count);
+        vec_bytes upperLowerDispense(int _count_upper, int _count_lower);
 
     public:
         class Exception : public std::exception
