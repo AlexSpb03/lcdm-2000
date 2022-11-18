@@ -29,7 +29,7 @@ void TTY::Connect(const string &port, int baudrate)
     {
         char *errmsg = strerror(errno);
         printf("%s\n", errmsg);
-        throw TTYException();
+        throw TTY::Exception("Cannot open port" + port);
     }
     struct termios options;    /*структура для установки порта*/
     tcgetattr(F_ID, &options); /*читает пораметры порта*/
@@ -71,15 +71,13 @@ int TTY::Write(const vector<unsigned char> &data)
 
     if (F_ID == -1)
     {
-        throw TTYException();
+        throw TTY::Exception("Error. Port don't open");
     }
 
     int n = write(F_ID, &data[0], data.size());
     if (n == -1)
     {
-        char *errmsg = strerror(errno);
-        printf("%s\n", errmsg);
-        throw TTYException();
+        throw TTY::Exception(std::string(strerror(errno)), errno);
     }
     return n;
 }
@@ -90,7 +88,7 @@ void TTY::Read(vector<unsigned char> &data, int size)
     data.clear();
     if (F_ID == -1)
     {
-        throw TTYException();
+        throw TTY::Exception("Error. Port don't open");
     }
 
     unsigned char *buf = new unsigned char[size];
@@ -117,9 +115,7 @@ void TTY::Read(vector<unsigned char> &data, int size)
             int n = read(F_ID, buf, len);
             if (n == -1)
             {
-                char *errmsg = strerror(errno);
-                printf("%s\n", errmsg);
-                break;
+                throw TTY::Exception(std::string(strerror(errno)), errno);
             }
             len -= n;
 

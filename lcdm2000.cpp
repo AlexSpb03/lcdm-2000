@@ -250,7 +250,7 @@ namespace Devices
 			print("Send", packet);
 			return tty.Write(packet);
 		}
-		catch (std::exception &e)
+		catch (const TTY::Exception &e)
 		{
 			throw e;
 		}
@@ -269,7 +269,7 @@ namespace Devices
 		{
 			tty.Read(buf, 1);
 		}
-		catch (Exception &e)
+		catch (const TTY::Exception &e)
 		{
 			throw e;
 		}
@@ -291,7 +291,14 @@ namespace Devices
 	{
 
 		vec_bytes packet = {static_cast<cc_byte>(LcdmCommands::ACK)};
-		tty.Write(packet);
+		try
+		{
+			tty.Write(packet);
+		}
+		catch (const TTY::Exception &e)
+		{
+			throw e;
+		}
 	}
 
 	/**
@@ -303,7 +310,14 @@ namespace Devices
 	{
 
 		vec_bytes packet = {static_cast<cc_byte>(LcdmCommands::NAK)};
-		tty.Write(packet);
+		try
+		{
+			tty.Write(packet);
+		}
+		catch (const TTY::Exception &e)
+		{
+			throw e;
+		}
 	}
 
 	/**
@@ -331,7 +345,7 @@ namespace Devices
 		{
 			tty.Read(buf, recv_bytes);
 		}
-		catch (std::exception &e)
+		catch (const TTY::Exception &e)
 		{
 			throw e;
 		}

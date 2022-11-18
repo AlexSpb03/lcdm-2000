@@ -13,7 +13,7 @@ int main()
     {
         lcdm2000.connect(port, B9600);
     }
-    catch (const TTYException &e)
+    catch (const TTY::Exception &e)
     {
         std::cerr << "Cannot connect to port:" << port << std::endl;
         return -1;
@@ -51,6 +51,10 @@ int main()
         // lcdm2000.lowerDispense(2);
     }
     catch (Devices::lcdm2000::Exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
+    catch (TTY::Exception &e)
     {
         std::cout << e.what() << std::endl;
     }
