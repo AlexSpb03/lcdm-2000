@@ -77,10 +77,11 @@ namespace Devices
         int sendCommand(LcdmCommands cmd, vec_bytes data = {});
         cc_byte getACK();
         void sendACK();
-        vec_bytes getResponse(int recv_bytes);
+        void sendNAK();
+        vec_bytes getResponse(int recv_bytes, int attempts = 3);
         vec_bytes go(LcdmCommands cmd, vec_bytes data = {}, int recv_bytes = 7);
         bool testCRC(vec_bytes bufData);
-        void print_b(std::string msg, vec_bytes data);
+        void print(std::string msg, vec_bytes data);
 
         void connect(std::string com_port, int baudrate = 9600);
 

@@ -247,7 +247,7 @@ namespace Devices
 		try
 		{
 			auto packet = compileCommand(cmd, data);
-			print_b("Send", packet);
+			print("Send", packet);
 			return tty.Write(packet);
 		}
 		catch (std::exception &e)
@@ -268,7 +268,6 @@ namespace Devices
 		try
 		{
 			tty.Read(buf, 1);
-			print_b("Recv ack", buf);
 		}
 		catch (Exception &e)
 		{
@@ -296,14 +295,35 @@ namespace Devices
 	}
 
 	/**
+	 * @brief Send NAK to Device after recv response
+	 *
+	 */
+	void
+	lcdm2000::sendNAK()
+	{
+
+		vec_bytes packet = {static_cast<cc_byte>(LcdmCommands::NAK)};
+		tty.Write(packet);
+	}
+
+	/**
 	 * @brief Recv response data from device
 	 *
 	 * @param recv_bytes
+	 * @param attempts - count attempts to get response. see 2.2.3 manual. Default 3 attempts.
 	 * @return vec_bytes
 	 */
 	vec_bytes
-	lcdm2000::getResponse(int recv_bytes)
+	lcdm2000::getResponse(int recv_bytes, int attempts)
 	{
+		bool errorGet = false;
+
+		//--- if attempts = 0 exit with exception
+		if (!attempts)
+		{
+			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
+		}
+
 		vec_bytes buf;
 
 		//--- try recv data from device
@@ -316,35 +336,27 @@ namespace Devices
 			throw e;
 		}
 
-		print_b("Recv", buf);
+		print("Recv", buf);
 
 		if (buf.size() < 4)
 		{
-			throw Exception("Bad response", EXCEPTION_BAD_RESPONSE_CODE);
+			errorGet = true;
 		}
 
-		//--- test crc in response
-		if (!testCRC(buf))
+		//--- test error in response
+		if (errorGet || !testCRC(buf) || buf[0] != SOH || buf[1] != ID || buf[2] != STX)
 		{
-			throw Exception("Bad CRC response", EXCEPTION_BAD_CRC_CODE);
+			errorGet = true;
 		}
 
-		//--- test 0 byte by SOH
-		if (buf[0] != SOH)
+		//--- if error in response
+		if (errorGet)
 		{
-			throw Exception("Bad SOH response", EXCEPTION_BAD_SOH_CODE);
-		}
+			//--- send NAK byte to device
+			sendNAK();
 
-		//--- test 1 byte by ID
-		if (buf[1] != ID)
-		{
-			throw Exception("Bad ID response", EXCEPTION_BAD_ID_CODE);
-		}
-
-		//--- test 2 byte by STX
-		if (buf[2] != STX)
-		{
-			throw Exception("Bad STX response", EXCEPTION_BAD_STX_CODE);
+			//--- new try get response
+			return getResponse(recv_bytes, attempts - 1);
 		}
 
 		//--- Send ACK byte to device
@@ -361,7 +373,7 @@ namespace Devices
 	 * @param data
 	 */
 	void
-	lcdm2000::print_b(std::string msg, vec_bytes data)
+	lcdm2000::print(std::string msg, vec_bytes data)
 	{
 		std::cout << msg << ": ";
 		for (auto byte : data)
@@ -381,28 +393,46 @@ namespace Devices
 	lcdm2000::go(LcdmCommands cmd, vec_bytes data, int recv_bytes)
 	{
 		vec_bytes response;
+		bool success = false;
+		int attempts_count = 2;
 
-		//--- try send command
-		try
+		for (int attempt{0}; attempt < attempts_count; attempt++)
 		{
-			sendCommand(cmd, data);
-		}
-		catch (std::exception &e)
-		{
-			throw e;
-		}
-
-		//--- try recv ACK response
-		try
-		{
-			if (getACK() != ACK)
+			//--- try send command
+			try
 			{
-				throw Exception("Bad ACK response", EXCEPTION_BAD_ACK_RESPONSE_CODE);
+				sendCommand(cmd, data);
+			}
+			catch (std::exception &e)
+			{
+				throw e;
+			}
+
+			//--- try recv ACK response
+			try
+			{
+				cc_byte res = getACK();
+
+				if (res == static_cast<cc_byte>(LcdmCommands::ACK))
+				{
+					success = true;
+					break;
+				}
+
+				if (res == static_cast<cc_byte>(LcdmCommands::NAK))
+				{
+					continue;
+				}
+			}
+			catch (const Exception &e)
+			{
+				throw e;
 			}
 		}
-		catch (const Exception &e)
+
+		if (!success)
 		{
-			throw e;
+			throw Exception("Bad ACK response", EXCEPTION_BAD_ACK_RESPONSE_CODE);
 		}
 
 		//--- try recv response
