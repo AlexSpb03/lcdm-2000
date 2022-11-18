@@ -200,7 +200,7 @@ namespace Devices
 		{
 			tty.Connect(com_port, baudrate);
 		}
-		catch (const std::exception &e)
+		catch (const TTY::Exception &e)
 		{
 			throw e;
 		}
