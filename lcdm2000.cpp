@@ -503,7 +503,16 @@ namespace Devices
 		//--- position error byte in response packet
 		int numErrorByte = 5;
 
-		auto response = go(LcdmCommands::STATUS, {}, lenResponse);
+		vec_bytes response;
+
+		try
+		{
+			response = go(LcdmCommands::STATUS, {}, lenResponse);
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
 
 		//--- compare length
 		if (response.size() != lenResponse)
@@ -533,6 +542,70 @@ namespace Devices
 		RejectTray = (response[7] & 0b01000000) ? true : false;
 	}
 
+	void
+	lcdm2000::testStatus()
+	{
+		for (int i = 0; i < 2; i++)
+		{
+			try
+			{
+				status();
+			}
+			catch (Exception &e)
+			{
+				throw e;
+			}
+
+			if (CashBoxUpper || CashBoxLower)
+			{
+				throw Exception("Cashbox not installed");
+			}
+
+			if (SolenoidSensor)
+			{
+				throw Exception("Solenoid error");
+			}
+
+			if (CheckSensor1 || CheckSensor2 || CheckSensor3 || CheckSensor4 || DivertSensor1 || DivertSensor2 || EjectSensor || ExitSensor || RejectTray)
+			{
+				if (i)
+				{
+					throw Exception("Error sensor");
+				}
+
+				try
+				{
+					purge();
+				}
+				catch (const Exception &e)
+				{
+					throw e;
+				}
+				continue;
+			}
+			break;
+		}
+		purge();
+	}
+
+	void lcdm2000::printStatus()
+	{
+		std::cout << "CheckSensor1: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor1 << std::endl;
+		std::cout << "CheckSensor2: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor2 << std::endl;
+		std::cout << "CheckSensor3: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor3 << std::endl;
+		std::cout << "CheckSensor4: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor4 << std::endl;
+		std::cout << "DivertSensor1: " << std::setfill(' ') << std::setw(10) << std::boolalpha << DivertSensor1 << std::endl;
+		std::cout << "DivertSensor2: " << std::setfill(' ') << std::setw(10) << std::boolalpha << DivertSensor2 << std::endl;
+		std::cout << "EjectSensor: " << std::setfill(' ') << std::setw(10) << std::boolalpha << EjectSensor << std::endl;
+		std::cout << "ExitSensor: " << std::setfill(' ') << std::setw(10) << std::boolalpha << ExitSensor << std::endl;
+		std::cout << "SolenoidSensor: " << std::setfill(' ') << std::setw(10) << std::boolalpha << SolenoidSensor << std::endl;
+		std::cout << "UpperNearEnd: " << std::setfill(' ') << std::setw(10) << std::boolalpha << UpperNearEnd << std::endl;
+		std::cout << "LowerNearEnd: " << std::setfill(' ') << std::setw(10) << std::boolalpha << LowerNearEnd << std::endl;
+		std::cout << "CashBoxUpper: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CashBoxUpper << std::endl;
+		std::cout << "CashBoxLower: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CashBoxLower << std::endl;
+		std::cout << "RejectTray: " << std::setfill(' ') << std::setw(10) << std::boolalpha << RejectTray << std::endl;
+	}
+
 	/**
 	 * @brief Send UPPER_DISPENSE command
 	 *
@@ -541,11 +614,23 @@ namespace Devices
 	void
 	lcdm2000::upperDispense(int _count)
 	{
+		//--- get status device before command
+		try
+		{
+			testStatus();
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
+
 		//--- length response in bytes. see docs
 		int lenResponse = 14;
 
 		//--- position error byte in response packet
 		int numErrorByte = 8;
+
+		vec_bytes response;
 
 		if (_count < 1 || _count > 60)
 		{
@@ -566,7 +651,14 @@ namespace Devices
 		}
 
 		//--- get response
-		auto response = go(LcdmCommands::UPPER_DISPENSE, data, lenResponse);
+		try
+		{
+			response = go(LcdmCommands::UPPER_DISPENSE, data, lenResponse);
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
 
 		//--- compare length
 		if (response.size() != lenResponse)
@@ -589,11 +681,23 @@ namespace Devices
 	void
 	lcdm2000::lowerDispense(int _count)
 	{
+		//--- get status device before command
+		try
+		{
+			testStatus();
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
+
 		//--- length response in bytes. see docs
 		int lenResponse = 14;
 
 		//--- position error byte in response packet
 		int numErrorByte = 8;
+
+		vec_bytes response;
 
 		if (_count < 1 || _count > 60)
 		{
@@ -614,7 +718,14 @@ namespace Devices
 		}
 
 		//--- get response
-		auto response = go(LcdmCommands::LOWER_DISPENSE, data, lenResponse);
+		try
+		{
+			response = go(LcdmCommands::LOWER_DISPENSE, data, lenResponse);
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
 
 		//--- compare length
 		if (response.size() != lenResponse)
@@ -632,11 +743,23 @@ namespace Devices
 	vec_bytes
 	lcdm2000::upperLowerDispense(int _count_upper, int _count_lower)
 	{
+		//--- get status device before command
+		try
+		{
+			testStatus();
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
+
 		//--- length response in bytes. see docs
 		int lenResponse = 21;
 
 		//--- position error byte in response packet
 		int numErrorByte = 12;
+
+		vec_bytes data, response;
 
 		if (_count_upper < 0 || _count_upper > 60)
 		{
@@ -650,7 +773,6 @@ namespace Devices
 
 		std::string count_upper = std::to_string(_count_upper);
 		std::string count_lower = std::to_string(_count_lower);
-		vec_bytes data;
 
 		//--- Add Upper bills
 		if (_count_upper < 10)
@@ -677,7 +799,14 @@ namespace Devices
 		}
 
 		//--- get response
-		auto response = go(LcdmCommands::UPPER_AND_LOWER_DISPENSE, data, lenResponse);
+		try
+		{
+			response = go(LcdmCommands::UPPER_AND_LOWER_DISPENSE, data, lenResponse);
+		}
+		catch (Exception &e)
+		{
+			throw e;
+		}
 
 		//--- compare length
 		if (response.size() != lenResponse)

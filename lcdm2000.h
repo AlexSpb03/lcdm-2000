@@ -87,6 +87,8 @@ namespace Devices
 
         void purge();
         void status();
+        void testStatus();
+        void printStatus();
         void upperDispense(int _count);
         void lowerDispense(int _count);
         vec_bytes upperLowerDispense(int _count_upper, int _count_lower);
@@ -117,12 +119,12 @@ namespace Devices
             int getCode()
             {
                 return code;
-            }
+            };
 
             const char *what() const noexcept override
             {
                 return str.c_str();
-            }
+            };
         };
     };
 } // namespace

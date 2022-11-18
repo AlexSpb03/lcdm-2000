@@ -21,12 +21,7 @@ int main()
 
     try
     {
-        // lcdm2000.purge();
 
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        // lcdm2000.status();
-
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
         auto result = lcdm2000.upperLowerDispense(1, 0);
 
         //--- print result:
@@ -45,10 +40,6 @@ int main()
                   << std::setw(20) << "upper check: " << std::dec << static_cast<int>(result[4]) << std::endl
                   << std::setw(20) << "lower check: " << std::dec << static_cast<int>(result[5]) << std::endl
                   << "============ End =============" << std::endl;
-
-        // lcdm2000.upperDispense(1);
-        // std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-        // lcdm2000.lowerDispense(2);
     }
     catch (Devices::lcdm2000::Exception &e)
     {
