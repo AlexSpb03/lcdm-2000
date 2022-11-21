@@ -2,11 +2,141 @@
 
 namespace Devices
 {
-	lcdm2000::lcdm2000()
+
+	Clcdm2000::TTY::TTY()
+	{
+		fileDescriptor = -1;
+	}
+
+	Clcdm2000::TTY::~TTY()
+	{
+		Disconnect();
+	}
+
+	bool Clcdm2000::TTY::IsOK() const
+	{
+		return fileDescriptor != -1;
+	}
+
+	void Clcdm2000::TTY::Connect(const std::string &port, int baudrate)
+	{
+
+		Disconnect();
+
+		fileDescriptor = open(port.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+		if (fileDescriptor == -1)
+		{
+			throw Exception(strerror(errno));
+		}
+		struct termios options;				 /*структура для установки порта*/
+		tcgetattr(fileDescriptor, &options); /*читает пораметры порта*/
+
+		cfsetispeed(&options, baudrate); /*установка скорости порта*/
+		cfsetospeed(&options, baudrate); /*установка скорости порта*/
+
+		options.c_cc[VTIME] = 1; /*Время ожидания байта 20*0.1 = 2 секунды */
+		options.c_cc[VMIN] = 0;	 /*минимальное число байт для чтения*/
+
+		options.c_cflag &= ~PARENB; /*бит четности не используется*/
+		options.c_cflag &= ~CSTOPB; /*1 стоп бит */
+		options.c_cflag &= ~CSIZE;	/*Размер байта*/
+		options.c_cflag |= CS8;		/*8 бит*/
+
+		options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+		options.c_cflag |= CREAD | CLOCAL;
+		options.c_cflag &= ~CRTSCTS;
+		options.c_iflag &= ~(IXON | IXOFF | IXANY);
+
+		options.c_lflag = 0;
+		options.c_oflag &= ~OPOST; /*Обязательно отключить постобработку*/
+
+		tcsetattr(fileDescriptor, TCSANOW, &options); /*сохронения параметров порта*/
+	}
+
+	void Clcdm2000::TTY::Disconnect()
+	{
+
+		if (fileDescriptor != -1)
+		{
+			close(fileDescriptor);
+			fileDescriptor = -1;
+		}
+	}
+
+	int Clcdm2000::TTY::Write(const std::vector<unsigned char> &data)
+	{
+
+		if (fileDescriptor == -1)
+		{
+			throw Exception("Error. Port don't open");
+		}
+
+		int n = write(fileDescriptor, &data[0], data.size());
+		if (n == -1)
+		{
+			throw Exception(std::string(strerror(errno)), errno);
+		}
+		return n;
+	}
+
+	void Clcdm2000::TTY::Read(std::vector<unsigned char> &data, int size)
+	{
+		int timeout_sec = 60;
+		data.clear();
+		if (fileDescriptor == -1)
+		{
+			throw Exception("Error. Port don't open");
+		}
+
+		unsigned char *buf = new unsigned char[size];
+		int len = size;
+
+		struct pollfd fds;
+		fds.fd = fileDescriptor;
+		fds.events = POLLIN;
+
+		//-- count attempts for read data. each byte two times
+		int attempt = size << 1;
+
+		for (;;)
+		{
+			if (!attempt)
+				break;
+			//--- wait ready read bytes
+			poll(&fds, 1, timeout_sec * 1000);
+
+			//--- if ready to read
+			if (fds.revents & POLLIN)
+			{
+				//--- read len bytes
+				int n = read(fileDescriptor, buf, len);
+				if (n == -1)
+				{
+					throw Exception(std::string(strerror(errno)), errno);
+				}
+				len -= n;
+
+				//--- add read bytes to result
+				for (int i{0}; i < n; i++)
+				{
+					data.push_back(buf[i]);
+				}
+
+				//--- if read all bytes -> return
+				if (len <= 0)
+				{
+					break;
+				}
+			}
+			attempt--;
+		}
+	}
+
+	Clcdm2000::Clcdm2000()
 	{
 	}
 
-	lcdm2000::~lcdm2000()
+	Clcdm2000::~Clcdm2000()
 	{
 	}
 
@@ -18,8 +148,7 @@ namespace Devices
 	 * @param size - size of buffer 0..size
 	 * @return cc_byte
 	 */
-	cc_byte
-	lcdm2000::GetCRC(vec_bytes bufData, size_t size)
+	cc_byte Clcdm2000::GetCRC(vec_bytes bufData, size_t size)
 	{
 		cc_byte crc = bufData[0];
 		for (int i = 1; i < size; i++)
@@ -38,8 +167,7 @@ namespace Devices
 	 * @return true
 	 * @return false
 	 */
-	bool
-	lcdm2000::testCRC(vec_bytes bufData)
+	bool Clcdm2000::testCRC(vec_bytes bufData)
 	{
 		//--- Begin from 0 byte in buffer
 		cc_byte crc = bufData[0];
@@ -63,8 +191,7 @@ namespace Devices
 	 * @return true
 	 * @return false
 	 */
-	bool
-	lcdm2000::checkErrors(cc_byte test)
+	bool Clcdm2000::checkErrors(cc_byte test)
 	{
 		errorCode = test;
 		bool error = true;
@@ -193,14 +320,13 @@ namespace Devices
 	 * @param com_port ex. /dev/ttyUSB0
 	 * @param baudrate ex. B9600
 	 */
-	void
-	lcdm2000::connect(std::string com_port, int baudrate)
+	void Clcdm2000::connect(std::string com_port, int baudrate)
 	{
 		try
 		{
 			tty.Connect(com_port, baudrate);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -214,8 +340,7 @@ namespace Devices
 	 * @param data
 	 * @return vec_bytes
 	 */
-	vec_bytes
-	lcdm2000::compileCommand(LcdmCommands cmd, vec_bytes data)
+	vec_bytes Clcdm2000::compileCommand(LcdmCommands cmd, vec_bytes data)
 	{
 		vec_bytes packet;
 
@@ -241,8 +366,7 @@ namespace Devices
 	 * @param data
 	 * @return int
 	 */
-	int
-	lcdm2000::sendCommand(LcdmCommands cmd, vec_bytes data)
+	int Clcdm2000::sendCommand(LcdmCommands cmd, vec_bytes data)
 	{
 		try
 		{
@@ -250,7 +374,7 @@ namespace Devices
 			print("Send", packet);
 			return tty.Write(packet);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -261,15 +385,14 @@ namespace Devices
 	 *
 	 * @return cc_byte
 	 */
-	cc_byte
-	lcdm2000::getACK()
+	cc_byte Clcdm2000::getACK()
 	{
 		vec_bytes buf;
 		try
 		{
 			tty.Read(buf, 1);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -286,8 +409,7 @@ namespace Devices
 	 * @brief Send ACK to Device after recv response
 	 *
 	 */
-	void
-	lcdm2000::sendACK()
+	void Clcdm2000::sendACK()
 	{
 
 		vec_bytes packet = {static_cast<cc_byte>(LcdmCommands::ACK)};
@@ -295,7 +417,7 @@ namespace Devices
 		{
 			tty.Write(packet);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -305,8 +427,7 @@ namespace Devices
 	 * @brief Send NAK to Device after recv response
 	 *
 	 */
-	void
-	lcdm2000::sendNAK()
+	void Clcdm2000::sendNAK()
 	{
 
 		vec_bytes packet = {static_cast<cc_byte>(LcdmCommands::NAK)};
@@ -314,7 +435,7 @@ namespace Devices
 		{
 			tty.Write(packet);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -327,8 +448,7 @@ namespace Devices
 	 * @param attempts - count attempts to get response. see 2.2.3 manual. Default 3 attempts.
 	 * @return vec_bytes
 	 */
-	vec_bytes
-	lcdm2000::getResponse(int recv_bytes, int attempts)
+	vec_bytes Clcdm2000::getResponse(int recv_bytes, int attempts)
 	{
 		bool errorGet = false;
 
@@ -345,7 +465,7 @@ namespace Devices
 		{
 			tty.Read(buf, recv_bytes);
 		}
-		catch (const TTY::Exception &e)
+		catch (const Exception &e)
 		{
 			throw e;
 		}
@@ -386,8 +506,7 @@ namespace Devices
 	 * @param msg
 	 * @param data
 	 */
-	void
-	lcdm2000::print(std::string msg, vec_bytes data)
+	void Clcdm2000::print(std::string msg, vec_bytes data)
 	{
 		std::cout << msg << ": ";
 		for (auto byte : data)
@@ -403,8 +522,7 @@ namespace Devices
 	 * @param recv_bytes
 	 * @return vec_bytes
 	 */
-	vec_bytes
-	lcdm2000::go(LcdmCommands cmd, vec_bytes data, int recv_bytes)
+	vec_bytes Clcdm2000::go(LcdmCommands cmd, vec_bytes data, int recv_bytes)
 	{
 		vec_bytes response;
 		bool success = false;
@@ -466,8 +584,7 @@ namespace Devices
 	 * @brief Send purge command
 	 *
 	 */
-	void
-	lcdm2000::purge()
+	void Clcdm2000::purge()
 	{
 		//--- length response in bytes. see docs
 		int lenResponse = 7;
@@ -494,8 +611,7 @@ namespace Devices
 	 * @brief Send status command
 	 *
 	 */
-	void
-	lcdm2000::status()
+	void Clcdm2000::status()
 	{
 		//--- length response in bytes. see docs
 		int lenResponse = 10;
@@ -543,13 +659,12 @@ namespace Devices
 	}
 
 	/**
-	 * @brief 
+	 * @brief
 	 * test status device and purge if need
 	 * if sensor error gen exception
 	 * call in all commands in begin
 	 */
-	void
-	lcdm2000::testStatus()
+	void Clcdm2000::testStatus()
 	{
 		for (int i = 0; i < 2; i++)
 		{
@@ -594,7 +709,7 @@ namespace Devices
 		purge();
 	}
 
-	void lcdm2000::printStatus()
+	void Clcdm2000::printStatus()
 	{
 		std::cout << "CheckSensor1: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor1 << std::endl;
 		std::cout << "CheckSensor2: " << std::setfill(' ') << std::setw(10) << std::boolalpha << CheckSensor2 << std::endl;
@@ -617,8 +732,7 @@ namespace Devices
 	 *
 	 * @param _count - count bills to dispense from upper box
 	 */
-	void
-	lcdm2000::upperDispense(int _count)
+	void Clcdm2000::upperDispense(int _count)
 	{
 		//--- get status device before command
 		try
@@ -684,8 +798,7 @@ namespace Devices
 	 *
 	 * @param _count - count bills to dispense from lower box
 	 */
-	void
-	lcdm2000::lowerDispense(int _count)
+	void Clcdm2000::lowerDispense(int _count)
 	{
 		//--- get status device before command
 		try
@@ -746,8 +859,21 @@ namespace Devices
 		}
 	}
 
-	vec_bytes
-	lcdm2000::upperLowerDispense(int _count_upper, int _count_lower)
+	/**
+	 * @brief Upper and lower dispense bills
+	 * 
+	 * @param _count_upper - count upper need dispanse
+	 * @param _count_lower - count lower need dispense
+	 * @return vec_bytes 
+	 * return:
+	 * 0 - upper exit count
+	 * 1 - lower exit count
+	 * 2 - upper rejected count
+	 * 3 - lower rejected count
+	 * 4 - upper check count
+	 * 5 - lower check count
+	 */
+	vec_bytes Clcdm2000::upperLowerDispense(int _count_upper, int _count_lower)
 	{
 		//--- get status device before command
 		try

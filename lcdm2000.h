@@ -6,7 +6,16 @@
 #include <iomanip>
 #include <chrono>
 #include <thread>
-#include "TTY.h"
+#include <string>
+#include <string.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <termios.h>
+#include <stdio.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <assert.h>
 
 namespace Devices
 {
@@ -36,10 +45,8 @@ namespace Devices
 #define EXCEPTION_BAD_ACK_RESPONSE_CODE 5
 #define EXCEPTION_BAD_COUNT 6
 
-    class lcdm2000
+    class Clcdm2000
     {
-
-        TTY tty;
         const cc_byte EOT = 0x04;
         const cc_byte ID = 0x50;
         const cc_byte STX = 0x02;
@@ -50,26 +57,26 @@ namespace Devices
 
         cc_byte errorCode;
         std::string errorMessage;
-    public: //sensors
 
-    bool CheckSensor1;
-    bool CheckSensor2;
-    bool CheckSensor3;
-    bool CheckSensor4;
-    bool DivertSensor1;
-    bool DivertSensor2;
-    bool EjectSensor;
-    bool ExitSensor;
-    bool SolenoidSensor;
-    bool UpperNearEnd;
-    bool LowerNearEnd;
-    bool CashBoxUpper;
-    bool CashBoxLower;
-    bool RejectTray;
+    public: // sensors
+        bool CheckSensor1;
+        bool CheckSensor2;
+        bool CheckSensor3;
+        bool CheckSensor4;
+        bool DivertSensor1;
+        bool DivertSensor2;
+        bool EjectSensor;
+        bool ExitSensor;
+        bool SolenoidSensor;
+        bool UpperNearEnd;
+        bool LowerNearEnd;
+        bool CashBoxUpper;
+        bool CashBoxLower;
+        bool RejectTray;
 
     public:
-        lcdm2000();
-        ~lcdm2000();
+        Clcdm2000();
+        ~Clcdm2000();
 
         cc_byte GetCRC(vec_bytes bufData, size_t size);
         bool checkErrors(cc_byte test);
@@ -126,6 +133,20 @@ namespace Devices
                 return str.c_str();
             };
         };
+
+        struct TTY
+        {
+            TTY();
+            virtual ~TTY();
+            bool IsOK() const;
+            void Connect(const std::string &port, int baudrate);
+            void Disconnect();
+            int Write(const std::vector<unsigned char> &data);
+            void Read(std::vector<unsigned char> &data, int size = 200);
+            int fileDescriptor = -1;
+        };
+
+        TTY tty;
     };
 } // namespace
 

@@ -7,13 +7,13 @@
 
 int main()
 {
-    Devices::lcdm2000 lcdm2000;
+    Devices::Clcdm2000 lcdm2000;
     std::string port = "/dev/ttyUSB0";
     try
     {
         lcdm2000.connect(port, B9600);
     }
-    catch (const TTY::Exception &e)
+    catch (const Devices::Clcdm2000::Exception &e)
     {
         std::cerr << "Cannot connect to port:" << port << std::endl;
         return -1;
@@ -41,11 +41,7 @@ int main()
                   << std::setw(20) << "lower check: " << std::dec << static_cast<int>(result[5]) << std::endl
                   << "============ End =============" << std::endl;
     }
-    catch (Devices::lcdm2000::Exception &e)
-    {
-        std::cout << e.what() << std::endl;
-    }
-    catch (TTY::Exception &e)
+    catch (Devices::Clcdm2000::Exception &e)
     {
         std::cout << e.what() << std::endl;
     }
