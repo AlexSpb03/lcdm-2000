@@ -34,7 +34,7 @@ namespace Devices
 		cfsetispeed(&options, baudrate); /*установка скорости порта*/
 		cfsetospeed(&options, baudrate); /*установка скорости порта*/
 
-		options.c_cc[VTIME] = 1; /*Время ожидания байта 20*0.1 = 2 секунды */
+		options.c_cc[VTIME] = 1; /*Время ожидания байта 0.1 секунды */
 		options.c_cc[VMIN] = 0;	 /*минимальное число байт для чтения*/
 
 		options.c_cflag &= ~PARENB; /*бит четности не используется*/
