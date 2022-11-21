@@ -10,7 +10,9 @@ g++ -g main.cpp lcdm2000.cpp -o main
 
 Пример
 ```c++
-Devices::Clcdm2000 lcdm2000;
+int main()
+{
+    Devices::Clcdm2000 lcdm2000;
     std::string port = "/dev/ttyUSB0";
     try
     {
@@ -48,4 +50,6 @@ Devices::Clcdm2000 lcdm2000;
     {
         std::cout << e.what() << std::endl;
     }
+    return 0;
+}
 ```
