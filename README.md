@@ -3,5 +3,5 @@
 compile:
 
 ```bash
-g++ -g main.cpp lcdm2000.cpp TTY.cpp -o main
+g++ -g main.cpp lcdm2000.cpp -o main
 ```
