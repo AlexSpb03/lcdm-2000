@@ -10,6 +10,10 @@ g++ -g main.cpp lcdm2000.cpp -o main
 
 Пример
 ```c++
+#include <iostream>
+#include <iomanip>
+#include "lcdm2000.h"
+
 int main()
 {
     Devices::Clcdm2000 lcdm2000;
