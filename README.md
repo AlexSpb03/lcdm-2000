@@ -1,6 +1,8 @@
 # LCDM-2000
 
-compile:
+Класс c++ для работы с диспенсером купюр PULOON LCDM-2000.
+
+Компиляция:
 
 ```bash
 g++ -g main.cpp lcdm2000.cpp -o main
