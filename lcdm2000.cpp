@@ -333,6 +333,15 @@ namespace Devices
 	}
 
 	/**
+	 * @brief Close com port
+	 *
+	 */
+	void Clcdm2000::disconnect()
+	{
+		tty.Disconnect();
+	}
+
+	/**
 	 * @brief
 	 * compile packet to send in device LCDM-2000
 	 *
@@ -861,10 +870,10 @@ namespace Devices
 
 	/**
 	 * @brief Upper and lower dispense bills
-	 * 
+	 *
 	 * @param _count_upper - count upper need dispanse
 	 * @param _count_lower - count lower need dispense
-	 * @return vec_bytes 
+	 * @return vec_bytes
 	 * return:
 	 * 0 - upper exit count
 	 * 1 - lower exit count

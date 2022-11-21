@@ -91,6 +91,7 @@ namespace Devices
         void print(std::string msg, vec_bytes data);
 
         void connect(std::string com_port, int baudrate = 9600);
+        void disconnect();
 
         void purge();
         void status();
