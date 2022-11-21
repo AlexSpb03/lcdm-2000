@@ -8,7 +8,7 @@
 g++ -g main.cpp lcdm2000.cpp -o main
 ```
 
-Пример
+Пример:
 ```c++
 #include <iostream>
 #include <iomanip>
