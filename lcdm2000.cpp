@@ -715,7 +715,6 @@ namespace Devices
 			}
 			break;
 		}
-		purge();
 	}
 
 	void Clcdm2000::printStatus()
